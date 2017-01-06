@@ -6,10 +6,10 @@ REMOTE_TEMPLATE_BASEURL=git@github.com:tantebootsy
 # Name of the repository the template is fetched from
 REMOTE_TEMPLATE_NAME=t3-tmpl.git
 
-# Base url of the repository the template-files are mirrored to
+# Base url of the project-repository the template-repository is mirrored to
 REMOTE_PROJECT_BASEURL=$REMOTE_TEMPLATE_BASEURL
 
-# Command with which MySQL is executable via the command-line
+# Command with which MySQL is executable via the command-line on the local development-environment
 LOCAL_MYSQL_COMMAND=mysql
 
 # MySQL admin username of local database
