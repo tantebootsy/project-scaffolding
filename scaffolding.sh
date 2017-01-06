@@ -1,46 +1,57 @@
 #! /bin/bash
 
-#http://stackoverflow.com/questions/3846380/how-to-iterate-through-all-git-branches-using-bash-script
+REMOTE_BASEURL_TEMPLATE=git@github.com:tantebootsy
+REMOTE_BASEURL_PROJECT=$REMOTE_BASEURL_TEMPLATE
+LOCAL_MYSQL_ADMIN_USERNAME=root
+LOCAL_MYSQL_ADMIN_PASSWORD=root
+
+# path (relative to the directory into which the template is cloned to) to database-file to import into local db
+LOCAL_MYSQL_FILE_TEMPLATE=storage/db/t3t_7.sql
+VERBOSE=true
 
 # wrapper for command-execution
 function exec_command {
 	eval $1
 	if [ $? -ne 0 ]; then
-		echo "WARNING! There was a problem with the following command: '$1'. Script will be terminated."
+		echo "WARNING! There was a problem with the following command: '$1'. Script terminated."
 		exit 1
 	else
-		echo "... '$1' done"
+		if [ -n "$2" ] && [ "$VERBOSE" = true ]; then
+			echo "... $2 ($1)."
+		fi
 	fi	
 }
 
-# clone template
-exec_command "git clone --bare git@github.com:tantebootsy/t3-tmpl.git testing"
+cd $(pwd)
 
-exec_command "cd testing"
-
-# bisheriges tmpl-remote umbenennen, wird ggf. später für Änderungen an der Template-Vorlage benötigt
-exec_command "git remote rename origin tmpl"
-
-# neues projekt-remote hinzufügen
 echo "
-Enter the URL to the project-repo to which GIT shall push changes from now on, then press [ENTER]:
-WARNING! This will delete the content of the project-repo including its history!
+Enter the name of the folder into which the template shall be cloned, then press [ENTER]:
 "
-exec_command "read url"
 
-exec_command "git remote add origin $url"
+exec_command "read FOLDER"
+exec_command "git clone $REMOTE_BASEURL_TEMPLATE/t3-tmpl.git $FOLDER" "template cloned"
+exec_command "cd $FOLDER"
 
-# push content of template-repo to newly added remote-repo
-exec_command "git push origin --mirror"
+# template-remote is renamed as it might be needed to push changes directly to the template-remote later on
+exec_command "git remote rename origin tmpl" "template-remote renamed"
 
-for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
-	git branch $branch -u origin/$branch
+echo "
+Enter the name of the project's remote-repository to which GIT shall push changes from now on, then press [ENTER]:
+WARNING! This will DELETE all content of the remote-repository including its history!
+"
+exec_command "read REPOSITORY"
+exec_command "git remote add origin $REMOTE_BASEURL_PROJECT/$REPOSITORY" "new project remote-repository added"
+exec_command "git push origin --mirror" "content of template-repository pushed to newly added project remote-repository"
+
+for BRANCH in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
+	exec_command "git branch $BRANCH -u origin/$BRANCH" "locally existing branches of 'origin' adjusted to use newly added remote-repository"
 done
 
-# name for project-database is asked for
-echo "Enter the name of the database for the project to be created, then press [ENTER]:"
+echo "Enter the name of the local project-database to be created, then press [ENTER]:"
 
-exec_command "read db"
+exec_command "read DATABASE"
 
-# project-database is created (needs proper character-set and collation-settings set vi my.cnf)
-exec_command "mysql -uroot -proot -e \"CREATE DATABASE $db\""
+# as no charset and collation is specified the following needs proper server-settings for character-set and collation
+exec_command "mysql -u$LOCAL_MYSQL_ADMIN_USERNAME -p$LOCAL_MYSQL_ADMIN_PASSWORD -e \"CREATE DATABASE $DATABASE\"" "project-database created"
+
+exec_command "mysql -u$LOCAL_MYSQL_ADMIN_USERNAME -p$LOCAL_MYSQL_ADMIN_PASSWORD -v $DATABASE < $LOCAL_MYSQL_FILE_TEMPLATE" "template-sql-file imported into newly created project-database"
