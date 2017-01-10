@@ -9,7 +9,7 @@ REMOTE_TEMPLATE_NAME=t3-tmpl.git
 # Base url of the project-repository the template-repository is mirrored to
 REMOTE_PROJECT_BASEURL=$REMOTE_TEMPLATE_BASEURL
 
-# Command with which MySQL is executable via the command-line on the local development-environment
+# Command with which MySQL is executable via the command-line within the local development-environment
 LOCAL_MYSQL_COMMAND=mysql
 
 # MySQL admin username of local database
@@ -27,7 +27,9 @@ VERBOSE=true
 # Defines whether script-explanation and instructions are shown
 README=true
 
-# wrapper for command-execution
+# Wrapper for command-execution including debug-information if command didn't return 0
+# @param string command executed
+# @param string process-information which is shown if VERBOSE=true
 function exec_command {
 	eval $1
 	if [ $? -ne 0 ]; then
