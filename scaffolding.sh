@@ -101,7 +101,8 @@ exec_command "git checkout $LOCAL_GIT_BRANCH" "switched to branch $LOCAL_GIT_BRA
 exec_command "composer update" "composer updated"
 exec_command "composer install" "composer-dependencies installed"
 exec_command "touch htdocs/typo3conf/ENABLE_INSTALL_TOOL" "ENABLE_INSTALL_TOOL created"
-exec_command "chmod -R 2770 htdocs"
+exec_command "chmod 2770 htdocs/typo3conf"
+exec_command "chmod 2770 htdocs/typo3conf/ext"
 
 LOCAL_OS_PWD=$(pwd)
 echo "Create a host on your local server, point its DocumentRoot to $LOCAL_OS_PWD/htdocs and enter the name here. Then press [ENTER]."
