@@ -19,7 +19,9 @@ LOCAL_MYSQL_ADMIN_USERNAME=root
 LOCAL_MYSQL_ADMIN_PASSWORD=root
 
 # Path to database-file which shall be imported into the local databse. The path can either be absolute or relative. If it's relative the database-file has to be present in the template-repository already. So e.g. the template is cloned into the folder "testing" and the database file then is under "testing/storage/database.sql" the variable has to be set as follows: "LOCAL_MYSQL_TEMPLATE_FILE=storage/database.sql"
-LOCAL_MYSQL_TEMPLATE_FILE=storage/db/t3t_7.sql
+LOCAL_MYSQL_TEMPLATE_FILE=storage/db/db.sql
+
+LOCAL_GIT_BRANCH=dev
 
 # Defines whether processing-information is shown
 VERBOSE=true
@@ -94,3 +96,14 @@ exec_command "read LOCAL_MYSQL_PROJECT_DATABASE"
 exec_command "$LOCAL_MYSQL_COMMAND -u$LOCAL_MYSQL_ADMIN_USERNAME -p$LOCAL_MYSQL_ADMIN_PASSWORD -e \"CREATE DATABASE $LOCAL_MYSQL_PROJECT_DATABASE\"" "project-database created"
 
 exec_command "$LOCAL_MYSQL_COMMAND -u$LOCAL_MYSQL_ADMIN_USERNAME -p$LOCAL_MYSQL_ADMIN_PASSWORD -v $LOCAL_MYSQL_PROJECT_DATABASE < $LOCAL_MYSQL_TEMPLATE_FILE" "sql-file imported into newly created project-database"
+
+exec_command "git checkout $LOCAL_GIT_BRANCH" "switched to branch $LOCAL_GIT_BRANCH"
+exec_command "composer update" "composer updated"
+exec_command "composer install" "composer-dependencies installed"
+exec_command "touch htdocs/typo3conf/ENABLE_INSTALL_TOOL" "ENABLE_INSTALL_TOOL created"
+
+LOCAL_OS_PWD=$(pwd)
+echo "Create a host on your local server, point its DocumentRoot to $LOCAL_OS_PWD/htdocs and enter the name here. Then press [ENTER]."
+exec_command "read LOCAL_APACHE_HOST"
+
+exec_command "open -a firefox -g http://$LOCAL_APACHE_HOST/typo3/install"
